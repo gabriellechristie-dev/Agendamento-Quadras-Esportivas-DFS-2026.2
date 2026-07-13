@@ -1,0 +1,11 @@
+# Dependências
+node_modules/
+
+# Variáveis de ambiente
+.env
+
+# Prisma gerado
+generated/prisma/
+
+# Logs
+*.log
