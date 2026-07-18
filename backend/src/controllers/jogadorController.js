@@ -1,80 +1,128 @@
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
+
+
+//CADASTRAR JOGADOR
+
 export const cadastrarJogador = async (request, response) => {
     try {
-        const { nome, email, telefone } = request.body;
+        const { nomeCompleto, email, telefone, senha } = request.body;
 
-        if (!nome?.trim() || !email?.trim() || !telefone?.trim()) {
+        if (!nomeCompleto?.trim() || !email?.trim() || !telefone?.trim() || !senha?.trim()) {
             return response.status(400).json({ 
-                mensagem: 'Erro: Todos os campos (nome, email e telefone) são obrigatórios!' 
+                mensagem: 'Erro: Todos os campos (nome, email, telefone e senha) são obrigatórios!' 
             });
         }
 
-        console.log(` Dados recebidos no VS Code! Nome: ${nome} | Email: ${email}`);
-        
-        return response.status(201).json({ mensagem: 'Jogador cadastrado com sucesso!' });
+        const novoJogador = await prisma.jogador.create({
+            data: {
+                nomeCompleto,
+                email,
+                telefone,
+                senha
+            }
+        });
+
+        console.log(`Jogador cadastrado com sucesso: ${novoJogador.nomeCompleto}`);
+
+        return response.status(201).json({
+            mensagem: 'Jogador cadastrado com sucesso!',
+            jogador: novoJogador    
+        });
+
     } catch (error) {
         console.error(error);
+
+        if (error.code === 'P2002') {
+            return response.status(400).json({ mensagem: 'Erro: Email já cadastrado!'});
+        }
         return response.status(500).json({ mensagem: 'Erro ao cadastrar jogador.' });
     }
 };
 
+//LISTAR JOGADORES
+
 export const listarJogadores = async (request, response) => {
     try{
-        console.log('Listando jogadores...');
+       
+        const jogadorListado = await prisma.jogador.findMany();
+
+        console.log(`Total de jogadores encontrados: ${jogadorListado.length}`);
 
         
-        //teste de jogadores falsos
-        const jogadoresFalsos = [
-            { id: 1, nome: 'João', email: 'joao@email.com', telefone: '85999999999' },
-            { id: 2, nome: 'Maria', email: 'maria@email.com', telefone: '85888888888' }
-        ];
-        
 
-        return response.status(200).json(jogadoresFalsos);
+        return response.status(200).json(jogadorListado);
 
     }catch (error) {
+
         console.error(error);
         return response.status(500).json({ mensagem: 'Erro ao listar jogadores.' });
 
     }
 }
 
+//ATUALIZAR JOGADOR
+
 export const atualizarJogador = async (request, response) => {
     try{
         const { id } = request.params;
-        const { nome, email, telefone } = request.body;
+        const { nomeCompleto, email, telefone } = request.body;
 
-        if (!nome?.trim() || !email?.trim() || !telefone?.trim()) {
+        if (!nomeCompleto?.trim() || !email?.trim() || !telefone?.trim()) {
             return response.status(400).json({ 
                 mensagem: 'Erro: Todos os campos (nome, email e telefone) são obrigatórios!' 
             });
         }
 
-        console.log(`Atualizando jogador com ID: ${id}`);
-        console.log(`Novos dados: Nome: ${nome} | Email: ${email} | Telefone: ${telefone}`);
+        const jogadorAtualizado = await prisma.jogador.update({
+            where: { id },
+            data: {
+                nomeCompleto,
+                email,
+                telefone
+            }
+        });
+
+        console.log (`Jogador atualizado com sucesso: ${jogadorAtualizado.nomeCompleto}`);
 
         return response.status(200).json({ 
             mensagem: 'Jogador atualizado com sucesso!',
-            dadosAtualizados: { id, nome, email, telefone }
+            jogador: jogadorAtualizado
         });
     }catch (error) {
         console.error(error);
+
+        if(error.code === 'P2025') {
+            return response.status(404).json({ mensagem: 'Erro: Jogador não encontrado!' });
+        }   
         return response.status(500).json( { mensagem: 'Erro ao atualizar jogador.' });
     }
 }
 
+//DELETAR JOGADOR
 export const deletarJogador = async (request, response) => {
     try{
         const { id } = request.params;
-        
-        console.log(`Deletando com ID: ${id} jogador `);
-        
 
-        return response.status(200).json({ 
-            mensagem: 'Jogador deletado com sucesso!',
-           
+        await prisma.jogador.delete({
+            where: { id }     
         });
+
+        console.log(`Jogador de id ${id}deletado com sucesso!`);
+
+        return response.status(200).json( { mensagem:'Jogador deletado com sucesso!' });
+                
+       
     }catch (error) {
+
         console.error(error);
+
+        if(error.code === 'P2025') {
+            return response.status(404).json({ mensagem: 'Erro: Jogador não encontrado!' });
+        }
+
         return response.status(500).json( { mensagem: 'Erro ao deletar jogador.' });
     }
 }
