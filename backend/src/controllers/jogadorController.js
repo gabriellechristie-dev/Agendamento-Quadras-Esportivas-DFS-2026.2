@@ -110,7 +110,7 @@ export const deletarJogador = async (request, response) => {
             where: { id }     
         });
 
-        console.log(`Jogador de id ${id}deletado com sucesso!`);
+        console.log(`Jogador de id ${id} deletado com sucesso!`);
 
         return response.status(200).json( { mensagem:'Jogador deletado com sucesso!' });
                 
