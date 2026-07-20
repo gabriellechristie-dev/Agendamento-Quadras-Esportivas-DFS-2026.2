@@ -1,11 +1,18 @@
-const express = require("express");
-const router = express.Router();
-const quadraController = require("../controllers/quadraController");
+import { Router } from "express";
+import {
+  criarQuadra,
+  listarQuadras,
+  buscarQuadraPorId,
+  atualizarQuadra,
+  deletarQuadra,
+} from "../controllers/quadraController.js";
 
-router.post("/", quadraController.criarQuadra);
-router.get("/", quadraController.listarQuadras);
-router.get("/:id", quadraController.buscarQuadraPorId);
-router.put("/:id", quadraController.atualizarQuadra);
-router.delete("/:id", quadraController.deletarQuadra);
+const router = Router();
 
-module.exports = router;
+router.post("/", criarQuadra);
+router.get("/", listarQuadras);
+router.get("/:id", buscarQuadraPorId);
+router.put("/:id", atualizarQuadra);
+router.delete("/:id", deletarQuadra);
+
+export default router;

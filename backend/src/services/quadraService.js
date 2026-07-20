@@ -1,64 +1,59 @@
-const { PrismaClient } = require("@prisma/client");
-const { PrismaPg } = require("@prisma/adapter-pg");
-const { Pool } = require("pg");
+import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import pg from "pg";
+
+const { Pool } = pg;
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
 
 const prisma = new PrismaClient({ adapter });
 
-const listarQuadras = async () => {
-  const quadras = await prisma.quadra.findMany();
-  return quadras;
+export const listarQuadras = async () => {
+  return await prisma.quadra.findMany();
 };
 
-const buscarQuadraPorId = async (id) => {
-  const quadra = await prisma.quadra.findUnique({
-    where: {
-      id: Number(id),
-    },
+export const buscarQuadraPorId = async (id) => {
+  return await prisma.quadra.findUnique({
+    where: { id: String(id) },
   });
-  return quadra;
 };
 
-const criarQuadra = async (dados) => {
-  const novaQuadra = await prisma.quadra.create({
+export const criarQuadra = async (dados) => {
+  return await prisma.quadra.create({
     data: {
       nome: dados.nome,
       modalidade: dados.modalidade,
       localizacao: dados.localizacao,
+      status: dados.status || "DISPONIVEL",
     },
   });
-  return novaQuadra;
 };
 
-const atualizarQuadra = async (id, dados) => {
-  const quadraAtualizada = await prisma.quadra.update({
-    where: {
-      id: Number(id),
-    },
+export const atualizarQuadra = async (id, dados) => {
+  return await prisma.quadra.update({
+    where: { id: String(id) },
     data: {
       nome: dados.nome,
       modalidade: dados.modalidade,
       localizacao: dados.localizacao,
+      ...(dados.status && { status: dados.status }),
     },
   });
-  return quadraAtualizada;
 };
 
-const deletarQuadra = async (id) => {
-  const quadraDeletada = await prisma.quadra.delete({
-    where: {
-      id: Number(id),
-    },
+export const deletarQuadra = async (id) => {
+  return await prisma.quadra.delete({
+    where: { id: String(id) },
   });
-  return quadraDeletada;
 };
 
-module.exports = {
+const quadraService = {
   listarQuadras,
   buscarQuadraPorId,
   criarQuadra,
   atualizarQuadra,
   deletarQuadra,
 };
+
+export default quadraService;

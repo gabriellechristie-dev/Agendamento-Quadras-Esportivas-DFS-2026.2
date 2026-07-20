@@ -1,80 +1,97 @@
-const quadraService = require("../services/quadraService");
+import * as quadraService from "../services/quadraService.js";
 
-async function criarQuadra(request, response) {
+// CRIAR QUADRA
+export const criarQuadra = async (req, res) => {
   try {
-    const novaQuadra = await quadraService.criarQuadra(request.body);
-    return response.status(201).json(novaQuadra);
+    const { nome, modalidade, localizacao, status } = req.body;
+
+    if (!nome?.trim() || !modalidade?.trim() || !localizacao?.trim()) {
+      return res.status(400).json({
+        mensagem: "Erro: Todos os campos (nome, modalidade e localizacao) são obrigatórios!",
+      });
+    }
+
+    const novaQuadra = await quadraService.criarQuadra({ nome, modalidade, localizacao, status });
+    return res.status(201).json({
+      mensagem: "Quadra criada com sucesso!",
+      quadra: novaQuadra,
+    });
   } catch (error) {
     console.error("Erro ao criar quadra:", error);
-    return response
-      .status(500)
-      .json({ erro: "Erro interno ao cadastrar a quadra." });
+    return res.status(500).json({ mensagem: "Erro ao criar quadra." });
   }
-}
+};
 
-async function listarQuadras(request, response) {
+// LISTAR QUADRAS
+export const listarQuadras = async (req, res) => {
   try {
     const quadras = await quadraService.listarQuadras();
-    return response.status(200).json(quadras);
+    return res.status(200).json(quadras);
   } catch (error) {
     console.error("Erro ao listar quadras:", error);
-    return response
-      .status(500)
-      .json({ erro: "Erro interno ao buscar as quadras." });
+    return res.status(500).json({ mensagem: "Erro ao listar quadras." });
   }
-}
+};
 
-async function buscarQuadraPorId(request, response) {
+// BUSCAR QUADRA POR ID
+export const buscarQuadraPorId = async (req, res) => {
   try {
-    const { id } = request.params;
+    const { id } = req.params;
     const quadra = await quadraService.buscarQuadraPorId(id);
 
     if (!quadra) {
-      return response.status(404).json({ erro: "Quadra não encontrada." });
+      return res.status(404).json({ mensagem: "Quadra não encontrada." });
     }
 
-    return response.status(200).json(quadra);
+    return res.status(200).json(quadra);
   } catch (error) {
     console.error("Erro ao buscar quadra:", error);
-    return response
-      .status(500)
-      .json({ erro: "Erro interno ao buscar a quadra." });
+    return res.status(500).json({ mensagem: "Erro ao buscar quadra." });
   }
-}
+};
 
-async function atualizarQuadra(request, response) {
+// ATUALIZAR QUADRA
+export const atualizarQuadra = async (req, res) => {
   try {
-    const { id } = request.params;
-    const quadraAtualizada = await quadraService.atualizarQuadra(
-      id,
-      request.body,
-    );
-    return response.status(200).json(quadraAtualizada);
+    const { id } = req.params;
+    const { nome, modalidade, localizacao, status } = req.body;
+
+    const quadraAtualizada = await quadraService.atualizarQuadra(id, {
+      nome,
+      modalidade,
+      localizacao,
+      status,
+    });
+
+    return res.status(200).json({
+      mensagem: "Quadra atualizada com sucesso!",
+      quadra: quadraAtualizada,
+    });
   } catch (error) {
     console.error("Erro ao atualizar quadra:", error);
-    return response
-      .status(500)
-      .json({ erro: "Erro ao atualizar os dados da quadra." });
+    if (error.code === "P2025") {
+      return res.status(404).json({ mensagem: "Quadra não encontrada." });
+    }
+    return res.status(500).json({ mensagem: "Erro ao atualizar quadra." });
   }
-}
+};
 
-async function deletarQuadra(request, response) {
+// DELETAR QUADRA
+export const deletarQuadra = async (req, res) => {
   try {
-    const { id } = request.params;
+    const { id } = req.params;
     await quadraService.deletarQuadra(id);
-    return response.status(204).send();
+    return res.status(200).json({ mensagem: "Quadra deletada com sucesso!" });
   } catch (error) {
+    if (error.code === "P2025") {
+      return res.status(404).json({ mensagem: "Quadra não encontrada." });
+    }
+    if (error.code === "P2003") {
+      return res.status(400).json({
+        mensagem: "Erro: Não é possível deletar esta quadra pois há reservas vinculadas a ela.",
+      });
+    }
     console.error("Erro ao deletar quadra:", error);
-    return response
-      .status(500)
-      .json({ erro: "Erro ao remover a quadra do sistema." });
+    return res.status(500).json({ mensagem: "Erro ao deletar quadra." });
   }
-}
-
-module.exports = {
-  criarQuadra,
-  listarQuadras,
-  buscarQuadraPorId,
-  atualizarQuadra,
-  deletarQuadra,
 };
