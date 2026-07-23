@@ -1,9 +1,9 @@
+import 'dotenv/config';
 import app from './app.js';
 
-const PORT = 3001;
+//ele pega uma porta da nuvem ou no meu pc
+const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () =>{
-    console.log(`Servidor rodando em http://localhost:${PORT}`);
+app.listen(PORT, () => {
+  console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
-
-console.log("server.js carregado");

@@ -1,5 +1,11 @@
 import { Router } from "express";
-
+import {
+  criarQuadra,
+  listarQuadras,
+  buscarQuadraPorId,
+  atualizarQuadra,
+  deletarQuadra,
+} from "../controllers/quadraController.js";
 import { autenticarUsuario } from "../middlewares/authMiddleware.js";
 import { permitirTipos } from "../middlewares/roleMiddleware.js";
 
@@ -9,12 +15,23 @@ router.post(
   "/",
   autenticarUsuario,
   permitirTipos("ADMIN"),
-  (request, response) => {
-    return response.status(200).json({
-      mensagem: "Administrador autorizado a criar quadras!",
-      usuario: request.usuario
-    });
-  }
+  criarQuadra
 );
 
-export default router;
+router.get("/", listarQuadras);
+
+router.get("/:id", buscarQuadraPorId);
+
+router.put(
+  "/:id",
+  autenticarUsuario,
+  permitirTipos("ADMIN"),
+  atualizarQuadra
+);
+
+router.delete(
+  "/:id",
+  autenticarUsuario,
+  permitirTipos("ADMIN"),
+  deletarQuadra
+);
