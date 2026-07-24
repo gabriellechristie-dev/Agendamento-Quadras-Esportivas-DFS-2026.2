@@ -2,13 +2,25 @@ import * as reservaService from "../services/reservaService.js";
 
 export const criarReserva = async (req, res) => {
   try {
-    const { dataHora, data, duracao, quadraId, jogadorId } = req.body;
+    const {
+      dataHora,
+      data,
+      duracao,
+      quadraId,
+      jogadorId
+    } = req.body;
 
     const dataFinal = dataHora || data;
 
-    if (!dataFinal || !duracao || !quadraId || !jogadorId) {
+    const jogadorReservaId =
+      req.usuario.tipo === "ADMIN"
+        ? jogadorId
+        : req.usuario.id;
+
+    if (!dataFinal || !duracao || !quadraId || !jogadorReservaId) {
       return res.status(400).json({
-        mensagem: "Erro: Todos os campos (dataHora/data, duracao, quadraId, jogadorId) são obrigatórios!",
+        mensagem:
+          "Erro: data, duração, quadra e jogador são obrigatórios!"
       });
     }
 
@@ -16,18 +28,20 @@ export const criarReserva = async (req, res) => {
       dataHora: dataFinal,
       duracao,
       quadraId,
-      jogadorId,
+      jogadorId: jogadorReservaId
     });
 
     return res.status(201).json({
       mensagem: "Reserva criada com sucesso!",
-      reserva: novaReserva,
+      reserva: novaReserva
     });
+
   } catch (error) {
     console.error("Erro ao criar reserva:", error);
+
     return res.status(500).json({
       mensagem: "Erro ao criar reserva.",
-      detalhe: error.message,
+      detalhe: error.message
     });
   }
 };
@@ -45,54 +59,152 @@ export const listarReservas = async (req, res) => {
 export const buscarReservaPorId = async (req, res) => {
   try {
     const { id } = req.params;
+
     const reserva = await reservaService.buscarReservaPorId(id);
 
     if (!reserva) {
-      return res.status(404).json({ mensagem: "Reserva não encontrada." });
+      return res.status(404).json({
+        mensagem: "Reserva não encontrada."
+      });
+    }
+
+    const usuarioEhAdmin = req.usuario.tipo === "ADMIN";
+
+    const reservaPertenceAoUsuario =
+      reserva.jogadorId === req.usuario.id;
+
+    if (!usuarioEhAdmin && !reservaPertenceAoUsuario) {
+      return res.status(403).json({
+        mensagem: "Você não possui permissão para acessar esta reserva!"
+      });
     }
 
     return res.status(200).json(reserva);
+
   } catch (error) {
     console.error("Erro ao buscar reserva:", error);
-    return res.status(500).json({ mensagem: "Erro ao buscar reserva." });
+
+    return res.status(500).json({
+      mensagem: "Erro ao buscar reserva."
+    });
   }
 };
 
 export const atualizarReserva = async (req, res) => {
   try {
     const { id } = req.params;
-    const { dataHora, data, duracao, quadraId, jogadorId } = req.body;
 
-    const reservaAtualizada = await reservaService.atualizarReserva(id, {
-      dataHora: dataHora || data,
+    const {
+      dataHora,
+      data,
       duracao,
       quadraId,
-      jogadorId,
-    });
+      jogadorId
+    } = req.body;
+
+    const reservaExistente =
+      await reservaService.buscarReservaPorId(id);
+
+    if (!reservaExistente) {
+      return res.status(404).json({
+        mensagem: "Reserva não encontrada."
+      });
+    }
+
+    const usuarioEhAdmin =
+      req.usuario.tipo === "ADMIN";
+
+    const reservaPertenceAoUsuario =
+      reservaExistente.jogadorId === req.usuario.id;
+
+    if (!usuarioEhAdmin && !reservaPertenceAoUsuario) {
+      return res.status(403).json({
+        mensagem:
+          "Você não possui permissão para atualizar esta reserva!"
+      });
+    }
+
+    const dadosAtualizados = {
+      dataHora: dataHora || data,
+      duracao,
+      quadraId
+    };
+
+    if (usuarioEhAdmin && jogadorId) {
+      dadosAtualizados.jogadorId = jogadorId;
+    }
+
+    const reservaAtualizada =
+      await reservaService.atualizarReserva(
+        id,
+        dadosAtualizados
+      );
 
     return res.status(200).json({
       mensagem: "Reserva atualizada com sucesso!",
-      reserva: reservaAtualizada,
+      reserva: reservaAtualizada
     });
+
   } catch (error) {
     console.error("Erro ao atualizar reserva:", error);
+
     if (error.code === "P2025") {
-      return res.status(404).json({ mensagem: "Reserva não encontrada." });
+      return res.status(404).json({
+        mensagem: "Reserva não encontrada."
+      });
     }
-    return res.status(500).json({ mensagem: "Erro ao atualizar reserva." });
+
+    return res.status(500).json({
+      mensagem: "Erro ao atualizar reserva.",
+      detalhe: error.message
+    });
   }
 };
 
 export const deletarReserva = async (req, res) => {
   try {
     const { id } = req.params;
-    await reservaService.deletarReserva(id);
-    return res.status(200).json({ mensagem: "Reserva deletada com sucesso!" });
-  } catch (error) {
-    if (error.code === "P2025") {
-      return res.status(404).json({ mensagem: "Reserva não encontrada." });
+
+    const reservaExistente =
+      await reservaService.buscarReservaPorId(id);
+
+    if (!reservaExistente) {
+      return res.status(404).json({
+        mensagem: "Reserva não encontrada."
+      });
     }
+
+    const usuarioEhAdmin =
+      req.usuario.tipo === "ADMIN";
+
+    const reservaPertenceAoUsuario =
+      reservaExistente.jogadorId === req.usuario.id;
+
+    if (!usuarioEhAdmin && !reservaPertenceAoUsuario) {
+      return res.status(403).json({
+        mensagem:
+          "Você não possui permissão para excluir esta reserva!"
+      });
+    }
+
+    await reservaService.deletarReserva(id);
+
+    return res.status(200).json({
+      mensagem: "Reserva deletada com sucesso!"
+    });
+
+  } catch (error) {
     console.error("Erro ao deletar reserva:", error);
-    return res.status(500).json({ mensagem: "Erro ao deletar reserva." });
+
+    if (error.code === "P2025") {
+      return res.status(404).json({
+        mensagem: "Reserva não encontrada."
+      });
+    }
+
+    return res.status(500).json({
+      mensagem: "Erro ao deletar reserva.",
+      detalhe: error.message
+    });
   }
 };

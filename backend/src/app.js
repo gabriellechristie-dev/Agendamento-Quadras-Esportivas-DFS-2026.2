@@ -9,7 +9,7 @@ const app = express();
 
 app.use(express.json());
 
-app.use("/quadra", quadraRoutes);
+app.use("/quadras", quadraRoutes);
 app.use('/jogadores', jogadorRoutes);
 app.use('/reservas',reservaRoutes);
 app.use("/auth", authRoutes);

@@ -6,6 +6,7 @@ import {
   atualizarQuadra,
   deletarQuadra,
 } from "../controllers/quadraController.js";
+
 import { autenticarUsuario } from "../middlewares/authMiddleware.js";
 import { permitirTipos } from "../middlewares/roleMiddleware.js";
 
@@ -35,3 +36,5 @@ router.delete(
   permitirTipos("ADMIN"),
   deletarQuadra
 );
+
+export default router;

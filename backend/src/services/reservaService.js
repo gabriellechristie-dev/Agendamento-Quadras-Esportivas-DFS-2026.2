@@ -42,22 +42,39 @@ export const criarReserva = async (dados) => {
     },
   });
 };
+
 export const listarReservas = async () => {
   return await prisma.reserva.findMany({
     include: {
       quadra: true,
-      jogador: true,
-    },
+      jogador: {
+        select: {
+          id: true,
+          nomeCompleto: true,
+          email: true,
+          telefone: true
+        }
+      }
+    }
   });
 };
 
 export const buscarReservaPorId = async (id) => {
   return await prisma.reserva.findUnique({
-    where: { id: String(id) },
+    where: {
+      id: String(id)
+    },
     include: {
       quadra: true,
-      jogador: true,
-    },
+      jogador: {
+        select: {
+          id: true,
+          nomeCompleto: true,
+          email: true,
+          telefone: true
+        }
+      }
+    }
   });
 };
 

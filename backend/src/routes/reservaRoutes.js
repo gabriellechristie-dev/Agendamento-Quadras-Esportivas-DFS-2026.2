@@ -7,12 +7,13 @@ import {
   deletarReserva,
 } from "../controllers/reservaController.js";
 
+import {autenticarUsuario} from "../middlewares/authMiddleware.js";
 const router = Router();
 
-router.post("/", criarReserva);
-router.get("/", listarReservas);
-router.get("/:id", buscarReservaPorId);
-router.put("/:id", atualizarReserva);
-router.delete("/:id", deletarReserva);
+router.post("/",autenticarUsuario, criarReserva);
+router.get("/",autenticarUsuario, listarReservas);
+router.get("/:id",autenticarUsuario, buscarReservaPorId);
+router.put("/:id",autenticarUsuario, atualizarReserva);
+router.delete("/:id",autenticarUsuario, deletarReserva);
 
 export default router;
