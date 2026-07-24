@@ -7,12 +7,34 @@ import {
   deletarQuadra,
 } from "../controllers/quadraController.js";
 
+import { autenticarUsuario } from "../middlewares/authMiddleware.js";
+import { permitirTipos } from "../middlewares/roleMiddleware.js";
+
 const router = Router();
 
-router.post("/", criarQuadra);
+router.post(
+  "/",
+  autenticarUsuario,
+  permitirTipos("ADMIN"),
+  criarQuadra
+);
+
 router.get("/", listarQuadras);
+
 router.get("/:id", buscarQuadraPorId);
-router.put("/:id", atualizarQuadra);
-router.delete("/:id", deletarQuadra);
+
+router.put(
+  "/:id",
+  autenticarUsuario,
+  permitirTipos("ADMIN"),
+  atualizarQuadra
+);
+
+router.delete(
+  "/:id",
+  autenticarUsuario,
+  permitirTipos("ADMIN"),
+  deletarQuadra
+);
 
 export default router;
