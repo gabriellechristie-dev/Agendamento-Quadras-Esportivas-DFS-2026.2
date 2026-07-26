@@ -1,36 +1,17 @@
-import { PrismaClient } from "@prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
-import pg from "pg";
-
-const { Pool } = pg;
-
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-const adapter = new PrismaPg(pool);
-const prisma = new PrismaClient({ adapter });
+import { prisma } from "../lib/prisma.js";
+import { STATUS_RESERVA } from "../utils/constants.js";
+import {
+  calcularHorarioFim,
+  verificarConflitoHorario,
+} from "../utils/reservaUtils.js";
 
 export const criarReserva = async (dados) => {
   const inicio = new Date(dados.dataHora);
-  const duracaoMinutos = Number(dados.duracao || 60);
-  const fim = new Date(inicio.getTime() + duracaoMinutos * 60000);
+  const fim = calcularHorarioFim(dados.dataHora, dados.duracao);
   const quadraId = String(dados.quadraId);
 
- 
-  const conflito = await prisma.reserva.findFirst({
-    where: {
-      quadraId: quadraId,
-      status: "ATIVA",
-      AND: [
-        { horarioInicio: { lt: fim } },    
-        { horarioFim: { gt: inicio } },    
-      ],
-    },
-  });
+  await verificarConflitoHorario(quadraId, inicio, fim);
 
-  if (conflito) {
-    throw new Error("Horário indisponível para esta quadra.");
-  }
-
-  
   return await prisma.reserva.create({
     data: {
       data: inicio,
@@ -38,7 +19,7 @@ export const criarReserva = async (dados) => {
       horarioFim: fim,
       quadraId: quadraId,
       jogadorId: String(dados.jogadorId),
-      status: dados.status || "ATIVA",
+      status: dados.status || STATUS_RESERVA.ATIVA,
     },
   });
 };
@@ -52,17 +33,17 @@ export const listarReservas = async () => {
           id: true,
           nomeCompleto: true,
           email: true,
-          telefone: true
-        }
-      }
-    }
+          telefone: true,
+        },
+      },
+    },
   });
 };
 
 export const buscarReservaPorId = async (id) => {
   return await prisma.reserva.findUnique({
     where: {
-      id: String(id)
+      id: String(id),
     },
     include: {
       quadra: true,
@@ -71,28 +52,47 @@ export const buscarReservaPorId = async (id) => {
           id: true,
           nomeCompleto: true,
           email: true,
-          telefone: true
-        }
-      }
-    }
+          telefone: true,
+        },
+      },
+    },
   });
 };
 
 export const atualizarReserva = async (id, dados) => {
-  const inicio = dados.dataHora ? new Date(dados.dataHora) : undefined;
-  const duracaoMinutos = dados.duracao ? Number(dados.duracao) : 60;
+  const reservaId = String(id);
 
-  let fim = undefined;
-  if (inicio) {
-    fim = new Date(inicio.getTime() + duracaoMinutos * 60000);
+  const reservaAtual = await prisma.reserva.findUnique({
+    where: { id: reservaId },
+  });
+
+  if (!reservaAtual) {
+    const error = new Error("Reserva não encontrada.");
+    error.status = 404;
+    throw error;
   }
 
+  const inicio = dados.dataHora
+    ? new Date(dados.dataHora)
+    : reservaAtual.horarioInicio;
+  const duracaoMinutos = dados.duracao ? Number(dados.duracao) : 60;
+  const fim = calcularHorarioFim(inicio, duracaoMinutos);
+  const quadraId = dados.quadraId
+    ? String(dados.quadraId)
+    : reservaAtual.quadraId;
+
+  await verificarConflitoHorario(quadraId, inicio, fim, reservaId);
+
   return await prisma.reserva.update({
-    where: { id: String(id) },
+    where: { id: reservaId },
     data: {
-      ...(inicio && { data: inicio, horarioInicio: inicio, horarioFim: fim }),
+      ...(dados.dataHora && {
+        data: inicio,
+        horarioInicio: inicio,
+        horarioFim: fim,
+      }),
       ...(dados.status && { status: dados.status }),
-      ...(dados.quadraId && { quadraId: String(dados.quadraId) }),
+      ...(dados.quadraId && { quadraId }),
       ...(dados.jogadorId && { jogadorId: String(dados.jogadorId) }),
     },
   });
