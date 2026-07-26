@@ -1,20 +1,24 @@
-# 🏟️ API de Agendamento de Quadras
+# API de Agendamento de Quadras
 
 > **Projeto DFS-2026.2** desenvolvido como requisito do **CURSO: DESENVOLVIMENTO FULL STACK BÁSICO** para o **Bootcamp Atlântico Avanti**.
 
 Uma API RESTful robusta e segura projetada para o gerenciamento e agendamento de quadras esportivas, conectando jogadores a espaços disponíveis.
 
+## Objetivo do Projeto
+
+O objetivo deste projeto é fornecer uma infraestrutura de backend segura e eficiente para um sistema de locação e agendamento de quadras esportivas, integrando o cadastro de jogadores, gerenciamento de quadras e o controle de reservas por meio de uma API RESTful.
+
 ---
 
 ## Índice
 
-- [Equipe](#-equipe)
-- [Tecnologias](#-tecnologias)
-- [Funcionalidades Principais](#-funcionalidades-principais)
-- [Estrutura do Banco de Dados](#-estrutura-do-banco-de-dados)
-- [Como Executar o Projeto](#-como-executar-o-projeto)
-- [Testes Automatizados](#-testes-automatizados)
-- [Documentação da API](#-documentação-da-api)
+- [Equipe](#equipe)
+- [Tecnologias](#tecnologias)
+- [Funcionalidades Principais](#funcionalidades-principais)
+- [Estrutura do Banco de Dados](#estrutura-do-banco-de-dados)
+- [Como Executar o Projeto](#como-executar-o-projeto)
+- [Testes Automatizados](#testes-automatizados)
+- [Documentação da API](#documentação-da-api)
 
 ---
 
