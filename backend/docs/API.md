@@ -37,19 +37,21 @@ Esta documentação descreve os endpoints disponíveis na API REST do projeto **
 - **Corpo da Requisição (JSON):**
   ```json
   {
-    "name": "Seu Nome",
+    "nomeCompleto": "Seu Nome Completo",
     "email": "seu@email.com",
-    "password": "sua_senha_segura"
+    "telefone": "85999999999",
+    "senha": "sua_senha_segura"
   }
   ```
 - **Resposta de Sucesso (`201 Created`):**
   ```json
   {
-    "message": "Usuário criado com sucesso!",
-    "user": {
-      "id": "uuid-do-usuario",
-      "name": "Seu Nome",
-      "email": "seu@email.com"
+    "mensagem": "Jogador cadastrado com sucesso!",
+    "jogador": {
+      "id": "uuid-do-jogador",
+      "nomeCompleto": "Seu Nome Completo",
+      "email": "seu@email.com",
+      "telefone": "85999999999"
     }
   }
   ```
@@ -63,13 +65,18 @@ Esta documentação descreve os endpoints disponíveis na API REST do projeto **
   ```json
   {
     "email": "seu@email.com",
-    "password": "sua_senha_segura"
+    "senha": "sua_senha_segura"
   }
   ```
 - **Resposta de Sucesso (`200 OK`):**
   ```json
   {
-    "token": "eyJhbGciOiJIUzI1NiIsIn..."
+    "token": "eyJhbGciOiJIUzI1NiIsIn...",
+    "usuario": {
+      "id": "uuid-do-usuario",
+      "email": "seu@email.com",
+      "tipo": "JOGADOR"
+    }
   }
   ```
 
@@ -87,7 +94,7 @@ Esta documentação descreve os endpoints disponíveis na API REST do projeto **
   ```json
   [
     {
-      "id": 1,
+      "id": "uuid-da-quadra",
       "nome": "Quadra Poliesportiva A",
       "tipo": "Futsal / Vôlei",
       "precoHora": 80.0
@@ -112,7 +119,7 @@ Esta documentação descreve os endpoints disponíveis na API REST do projeto **
 - **Resposta de Sucesso (`201 Created`):**
   ```json
   {
-    "id": 2,
+    "id": "uuid-da-quadra",
     "nome": "Quadra de Society 1",
     "tipo": "Futebol Society",
     "precoHora": 120.0
@@ -132,18 +139,18 @@ Esta documentação descreve os endpoints disponíveis na API REST do projeto **
 - **Corpo da Requisição (JSON):**
   ```json
   {
-    "quadraId": 1,
-    "dataHoraInicio": "2026-08-01T14:00:00.000Z",
-    "dataHoraFim": "2026-08-01T15:00:00.000Z"
+    "jogadorId": "uuid-do-jogador",
+    "quadraId": "uuid-da-quadra",
+    "dataHora": "2026-07-30T18:00:00Z"
   }
   ```
 - **Resposta de Sucesso (`201 Created`):**
   ```json
   {
-    "id": 10,
-    "usuarioId": "uuid-do-usuario",
-    "quadraId": 1,
-    "status": "CONFIRMADO"
+    "id": "uuid-da-reserva",
+    "jogadorId": "uuid-do-jogador",
+    "quadraId": "uuid-da-quadra",
+    "dataHora": "2026-07-30T18:00:00Z"
   }
   ```
 
@@ -157,12 +164,11 @@ Esta documentação descreve os endpoints disponíveis na API REST do projeto **
   ```json
   [
     {
-      "id": 10,
+      "id": "uuid-da-reserva",
       "quadra": {
         "nome": "Quadra Poliesportiva A"
       },
-      "dataHoraInicio": "2026-08-01T14:00:00.000Z",
-      "dataHoraFim": "2026-08-01T15:00:00.000Z"
+      "dataHora": "2026-07-30T18:00:00Z"
     }
   ]
   ```
