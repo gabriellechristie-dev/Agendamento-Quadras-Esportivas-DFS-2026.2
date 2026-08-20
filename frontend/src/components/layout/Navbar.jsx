@@ -10,25 +10,34 @@ const links = [
 ];
 
 export default function Navbar() {
-  const { user, isAuthenticated, logout } = useAuth();
+  // Dados e funções disponibilizados pelo AuthContext
+  const { user, isAuthenticated, logout, tipo } = useAuth();
+
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
 
+  // Encerra a sessão e envia o usuário para o login
   function handleLogout() {
     logout();
-    navigate("/");
+    navigate("/login");
   }
 
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-slate-50/90 backdrop-blur">
       <div className="container-app flex h-16 items-center justify-between gap-4">
+        
+        {/* Logo */}
         <NavLink to="/" className="flex items-center gap-2 shrink-0">
           <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-gradient text-white">
             <CalendarCheck size={18} />
           </span>
-          <span className="font-display text-lg font-bold tracking-tight">ArenaPlay</span>
+
+          <span className="font-display text-lg font-bold tracking-tight">
+            ArenaPlay
+          </span>
         </NavLink>
 
+        {/* Navegação desktop */}
         <nav className="hidden md:flex items-center gap-1 rounded-full bg-slate-100 p-1">
           {links.map((link) => (
             <NavLink
@@ -48,16 +57,29 @@ export default function Navbar() {
           ))}
         </nav>
 
+        {/* Área de autenticação desktop */}
         <div className="hidden md:flex items-center gap-3">
           {isAuthenticated ? (
             <div className="flex items-center gap-3">
+              
+              {/* Informações do usuário logado */}
               <NavLink
                 to="/my-bookings"
                 className="flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700"
               >
-                {user.name}
+                {user?.email}
+
+                {/* Mostra o tipo recebido pelo backend */}
+                {tipo && (
+                  <span className="text-xs text-slate-400">
+                    {tipo}
+                  </span>
+                )}
               </NavLink>
+
+              {/* Logout */}
               <button
+                type="button"
                 onClick={handleLogout}
                 className="text-sm font-medium text-slate-500 hover:text-slate-800"
               >
@@ -66,17 +88,26 @@ export default function Navbar() {
             </div>
           ) : (
             <div className="flex items-center gap-3">
-              <NavLink to="/login" className="text-sm font-medium text-slate-600 hover:text-slate-900">
+              <NavLink
+                to="/login"
+                className="text-sm font-medium text-slate-600 hover:text-slate-900"
+              >
                 Entrar
               </NavLink>
-              <NavLink to="/sign-up" className="btn-primary !px-5 !py-2.5 text-sm">
+
+              <NavLink
+                to="/sign-up"
+                className="btn-primary !px-5 !py-2.5 text-sm"
+              >
                 Criar conta
               </NavLink>
             </div>
           )}
         </div>
 
+        {/* Botão do menu mobile */}
         <button
+          type="button"
           className="md:hidden flex h-9 w-9 items-center justify-center rounded-full text-slate-600"
           onClick={() => setMenuOpen((v) => !v)}
           aria-label="Abrir menu"
@@ -85,8 +116,10 @@ export default function Navbar() {
         </button>
       </div>
 
+      {/* Menu mobile */}
       {menuOpen && (
         <div className="md:hidden border-t border-slate-200 bg-white px-4 py-4 space-y-3">
+          
           {links.map((link) => (
             <NavLink
               key={link.to}
@@ -95,23 +128,35 @@ export default function Navbar() {
               onClick={() => setMenuOpen(false)}
               className={({ isActive }) =>
                 `block rounded-lg px-3 py-2 text-sm font-medium ${
-                  isActive ? "bg-brand-50 text-brand-700" : "text-slate-600"
+                  isActive
+                    ? "bg-brand-50 text-brand-700"
+                    : "text-slate-600"
                 }`
               }
             >
               {link.label}
             </NavLink>
           ))}
+
           {isAuthenticated ? (
-            <button
-              onClick={() => {
-                handleLogout();
-                setMenuOpen(false);
-              }}
-              className="btn-secondary w-full !py-2.5 text-sm"
-            >
-              Sair
-            </button>
+            <>
+              {/* Identificação do usuário no mobile */}
+              <div className="px-3 py-2 text-sm text-slate-500">
+                {user?.email}
+                {tipo && ` • ${tipo}`}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  handleLogout();
+                  setMenuOpen(false);
+                }}
+                className="btn-secondary w-full !py-2.5 text-sm"
+              >
+                Sair
+              </button>
+            </>
           ) : (
             <div className="flex gap-2 pt-1">
               <NavLink
@@ -121,6 +166,7 @@ export default function Navbar() {
               >
                 Entrar
               </NavLink>
+
               <NavLink
                 to="/sign-up"
                 onClick={() => setMenuOpen(false)}

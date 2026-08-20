@@ -3,23 +3,30 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 
 export default function Login() {
-  const { login } = useAuth();
+  const { login, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  function handleSubmit(e) {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!email.trim() || !password.trim()) {
       setError("Preencha e-mail e senha para continuar.");
       return;
     }
-    login({ email });
-    const redirectTo = location.state?.from || "/my-bookings";
-    navigate(redirectTo);
-  }
+    setError("");
+    try {
+      await login(email, password );
+      const redirectTo = location.state?.from || "/my-bookings";
+      navigate(redirectTo);
+    } catch (error) {
+      setError(error.response?.data?.mensagem || "Não foi possível fazer login. Tente novamente mais tarde.");
+      return;
+    }
+
+  };
 
   return (
     <div className="container-app flex justify-center py-16">
@@ -51,9 +58,10 @@ export default function Login() {
 
           {error && <p className="text-sm font-medium text-rose-600">{error}</p>}
 
-          <button type="submit" className="btn-primary w-full">
-            Entrar
+          <button type="submit" className="btn-primary w-full" disabled={loading}>
+            {loading ? "Entrando..." : "Entrar"}
           </button>
+
         </form>
 
         <p className="mt-6 text-center text-sm text-slate-500">

@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext.jsx";
+import { registrarUsuario } from "../services/authService.js";
 
 export default function SignUp() {
-  const { login } = useAuth();
+  
   const navigate = useNavigate();
   const location = useLocation();
   const [name, setName] = useState("");
@@ -12,17 +12,23 @@ export default function SignUp() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  function handleSubmit(e) {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!name.trim() || !email.trim() || !password.trim()) {
-      setError("Preencha nome, e-mail e senha para criar sua conta.");
+    if (!name.trim() || !email.trim() || !password.trim() || !phone.trim()) {
+      setError("Preencha todos os campos para criar sua conta!");
       return;
     }
-    login({ name, email });
-    const redirectTo = location.state?.from || "/my-bookings";
-    navigate(redirectTo);
+    setError(""); 
+  try {
+  await registrarUsuario(name, email, phone, password)
+  navigate("/login", { state: { from: location.state?.from || "/" } });
+  } catch (error) {
+  setError(error.response?.data?.mensagem || "Não foi possível criar sua conta. Tente novamente mais tarde.");
+  return;
   }
+  };
 
+    
   return (
     <div className="container-app flex justify-center py-16">
       <div className="card w-full max-w-md p-8">
