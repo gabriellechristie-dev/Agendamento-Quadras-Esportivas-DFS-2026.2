@@ -37,7 +37,10 @@ export const cadastrarUsuario = async ({
   };
 };
 
-export const loginUsuario = async ({ email, senha }) => {
+export const loginUsuario = async (dadosLogin) => {
+  const email = dadosLogin.email;
+  const senha = dadosLogin.senha || dadosLogin.password; // Aceita 'senha' ou 'password'
+
   const jogador = await prisma.jogador.findUnique({
     where: {
       email,

@@ -1,4 +1,19 @@
 import { prisma } from "../lib/prisma.js";
+import axios from "axios";
+
+const api = axios.create({
+  baseURL: "http://localhost:3000",
+});
+
+export async function listarQuadrasApi() {
+  const response = await api.get("/quadras");
+  return response.data;
+}
+
+export async function buscarQuadraPorIdApi(id) {
+  const response = await api.get(`/quadras/${id}`);
+  return response.data;
+}
 
 export const listarQuadras = async () => {
   return await prisma.quadra.findMany();

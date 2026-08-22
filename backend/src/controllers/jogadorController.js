@@ -1,4 +1,5 @@
 import * as jogadorService from "../services/jogadorService.js";
+import bcrypt from "bcrypt";
 
 export const cadastrarJogador = async (request, response) => {
   try {
@@ -16,11 +17,13 @@ export const cadastrarJogador = async (request, response) => {
       });
     }
 
+    const senhaHash = await bcrypt.hash(senha, 10);
+
     const novoJogador = await jogadorService.cadastrarJogador({
       nomeCompleto,
       email,
       telefone,
-      senha,
+      senha: senhaHash,
     });
 
     console.log(`Jogador cadastrado com sucesso: ${novoJogador.nomeCompleto}`);
