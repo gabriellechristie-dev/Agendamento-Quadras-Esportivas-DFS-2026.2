@@ -10,22 +10,31 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     if (!email.trim() || !password.trim()) {
       setError("Preencha e-mail e senha para continuar.");
       return;
     }
-    login({ email });
-    const redirectTo = location.state?.from || "/my-bookings";
-    navigate(redirectTo);
+
+    try {
+      setError("");
+      await login({ email, password });
+
+      const redirectTo = location.state?.from || "/my-bookings";
+      navigate(redirectTo);
+    } catch (err) {
+      setError("E-mail ou senha incorretos.");
+    }
   }
 
   return (
     <div className="container-app flex justify-center py-16">
       <div className="card w-full max-w-md p-8">
         <h1 className="font-display text-2xl font-bold">Entrar no ArenaPlay</h1>
-        <p className="mt-1 text-sm text-slate-500">Acesse para ver suas reservas e favoritos.</p>
+        <p className="mt-1 text-sm text-slate-500">
+          Acesse para ver suas reservas e favoritos.
+        </p>
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <div>
@@ -49,7 +58,9 @@ export default function Login() {
             />
           </div>
 
-          {error && <p className="text-sm font-medium text-rose-600">{error}</p>}
+          {error && (
+            <p className="text-sm font-medium text-rose-600">{error}</p>
+          )}
 
           <button type="submit" className="btn-primary w-full">
             Entrar

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { CalendarClock, Ticket, Heart, History, MapPin } from "lucide-react";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -6,34 +6,81 @@ import { useBooking } from "../context/BookingContext.jsx";
 import { getCourtById } from "../data/courts.js";
 import { formatLongDate, formatPrice } from "../utils/formatters.js";
 import CourtCard from "../components/courts/CourtCard.jsx";
+import { listarMinhasReservasApi } from "../services/reservaFrontService.js";
 
 const TABS = ["Próximos", "Histórico", "Favoritos", "Perfil"];
 
 export default function MyBookings() {
   const { user, isAuthenticated } = useAuth();
-  const { bookings, favorites, cancelBooking } = useBooking();
+  const { favorites } = useBooking();
   const [activeTab, setActiveTab] = useState("Próximos");
+
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    async function carregarReservas() {
+      if (!isAuthenticated) return;
+      try {
+        setLoading(true);
+        const dados = await listarMinhasReservasApi();
+
+        const formatadas = dados.map((r) => {
+          const dataObj = new Date(r.dataHora);
+          return {
+            id: r.id,
+            courtId: r.quadraId,
+            courtName: r.quadra?.nome || "Quadra Esportiva",
+            neighborhood: r.quadra?.localizacao || "São Paulo",
+            city: "São Paulo",
+            date: dataObj.toISOString().split("T")[0],
+            time: dataObj.toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+            price: r.quadra?.precoHora || 100,
+            status: r.status ? r.status.toLowerCase() : "confirmed",
+          };
+        });
+        setBookings(formatadas);
+      } catch (err) {
+        console.error("Erro ao carregar reservas:", err);
+        setError("Não foi possível carregar suas reservas do servidor.");
+      } finally {
+        setLoading(false);
+      }
+    }
+    carregarReservas();
+  }, [isAuthenticated]);
 
   const today = new Date().toISOString().split("T")[0];
 
   const upcoming = useMemo(
     () => bookings.filter((b) => b.status === "confirmed" && b.date >= today),
-    [bookings, today]
+    [bookings, today],
   );
   const history = useMemo(
     () => bookings.filter((b) => b.status === "cancelled" || b.date < today),
-    [bookings, today]
+    [bookings, today],
   );
   const totalSpent = useMemo(
-    () => bookings.filter((b) => b.status === "confirmed").reduce((sum, b) => sum + b.price, 0),
-    [bookings]
+    () =>
+      bookings
+        .filter((b) => b.status === "confirmed")
+        .reduce((sum, b) => sum + b.price, 0),
+    [bookings],
   );
-  const favoriteCourts = favorites.map((id) => getCourtById(id)).filter(Boolean);
+  const favoriteCourts = favorites
+    .map((id) => getCourtById(id))
+    .filter(Boolean);
 
   if (!isAuthenticated) {
     return (
       <div className="container-app flex flex-col items-center justify-center py-24 text-center">
-        <h1 className="font-display text-2xl font-bold">Entre para ver suas reservas</h1>
+        <h1 className="font-display text-2xl font-bold">
+          Entre para ver suas reservas
+        </h1>
         <p className="mt-3 max-w-sm text-slate-500">
           Seu painel reúne próximos jogos, histórico, favoritos e perfil.
         </p>
@@ -52,13 +99,31 @@ export default function MyBookings() {
   return (
     <div className="container-app py-10">
       <h1 className="font-display text-3xl font-bold">Olá, {user.name}</h1>
-      <p className="mt-1 text-slate-500">Acompanhe seus jogos e mantenha seus dados em dia.</p>
+      <p className="mt-1 text-slate-500">
+        Acompanhe seus jogos e mantenha seus dados em dia.
+      </p>
 
       <div className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard icon={CalendarClock} value={upcoming.length} label="Próximos jogos" />
-        <StatCard icon={Ticket} value={bookings.length} label="Total de reservas" />
-        <StatCard icon={Heart} value={favoriteCourts.length} label="Favoritas" />
-        <StatCard icon={History} value={formatPrice(totalSpent)} label="Total investido" />
+        <StatCard
+          icon={CalendarClock}
+          value={upcoming.length}
+          label="Próximos jogos"
+        />
+        <StatCard
+          icon={Ticket}
+          value={bookings.length}
+          label="Total de reservas"
+        />
+        <StatCard
+          icon={Heart}
+          value={favoriteCourts.length}
+          label="Favoritas"
+        />
+        <StatCard
+          icon={History}
+          value={formatPrice(totalSpent)}
+          label="Total investido"
+        />
       </div>
 
       <div className="mt-8 inline-flex flex-wrap gap-1 rounded-full bg-slate-100 p-1">
@@ -78,21 +143,30 @@ export default function MyBookings() {
       </div>
 
       <div className="mt-6">
-        {activeTab === "Próximos" && (
-          <BookingList
-            bookings={upcoming}
-            emptyTitle="Nenhuma reserva por aqui"
-            emptyDescription="Escolha uma quadra e garanta o próximo jogo da turma."
-            onCancel={cancelBooking}
-          />
-        )}
+        {loading ? (
+          <div className="card py-16 text-center text-slate-500">
+            Carregando reservas...
+          </div>
+        ) : error ? (
+          <div className="card py-10 text-center text-rose-600">{error}</div>
+        ) : (
+          <>
+            {activeTab === "Próximos" && (
+              <BookingList
+                bookings={upcoming}
+                emptyTitle="Nenhuma reserva por aqui"
+                emptyDescription="Escolha uma quadra e garanta o próximo jogo da turma."
+              />
+            )}
 
-        {activeTab === "Histórico" && (
-          <BookingList
-            bookings={history}
-            emptyTitle="Nenhum histórico ainda"
-            emptyDescription="Suas reservas passadas e canceladas vão aparecer aqui."
-          />
+            {activeTab === "Histórico" && (
+              <BookingList
+                bookings={history}
+                emptyTitle="Nenhum histórico ainda"
+                emptyDescription="Suas reservas passadas e canceladas vão aparecer aqui."
+              />
+            )}
+          </>
         )}
 
         {activeTab === "Favoritos" &&
@@ -114,12 +188,18 @@ export default function MyBookings() {
             <h2 className="font-display text-lg font-bold">Meus dados</h2>
             <div className="mt-4 space-y-4">
               <div>
-                <p className="text-xs font-medium uppercase text-slate-400">Nome</p>
-                <p className="text-sm font-medium">{user.name}</p>
+                <p className="text-xs font-medium uppercase text-slate-400">
+                  Nome
+                </p>
+                <p className="text-sm font-medium">
+                  {user?.name || "Não informado"}
+                </p>
               </div>
               <div>
-                <p className="text-xs font-medium uppercase text-slate-400">E-mail</p>
-                <p className="text-sm font-medium">{user.email || "—"}</p>
+                <p className="text-xs font-medium uppercase text-slate-400">
+                  E-mail
+                </p>
+                <p className="text-sm font-medium">{user?.email || "—"}</p>
               </div>
             </div>
           </div>
@@ -189,14 +269,19 @@ function BookingList({ bookings, emptyTitle, emptyDescription, onCancel }) {
                 <p className="font-bold">{formatPrice(booking.price)}</p>
                 <p
                   className={`text-xs font-semibold ${
-                    booking.status === "confirmed" ? "text-emerald-600" : "text-rose-500"
+                    booking.status === "confirmed"
+                      ? "text-emerald-600"
+                      : "text-rose-500"
                   }`}
                 >
                   {booking.status === "confirmed" ? "Confirmada" : "Cancelada"}
                 </p>
               </div>
               {onCancel && booking.status === "confirmed" && (
-                <button onClick={() => onCancel(booking.id)} className="btn-secondary !px-4 !py-2 text-sm">
+                <button
+                  onClick={() => onCancel(booking.id)}
+                  className="btn-secondary !px-4 !py-2 text-sm"
+                >
                   Cancelar
                 </button>
               )}

@@ -1,4 +1,9 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
+import axios from "axios";
+
+const api = axios.create({
+  baseURL: "http://localhost:3000",
+});
 
 const AuthContext = createContext(null);
 
@@ -22,19 +27,48 @@ export function AuthProvider({ children }) {
     }
   }, [user]);
 
-  function login({ name, email }) {
-    const displayName = name?.trim() || email?.split("@")[0] || "player";
-    setUser({ name: displayName, email: email || "" });
-    return true;
+  async function login(credentials) {
+    try {
+      const email = credentials.email;
+      const senha = credentials.password || credentials.senha;
+
+      const response = await api.post("/auth/login", {
+        email,
+        senha,
+      });
+
+      const { token, usuario, user: userData } = response.data;
+      if (token) {
+        localStorage.setItem("arenaplay:token", token);
+      }
+      setUser(userData || usuario || { email });
+    } catch (error) {
+      console.error("Erro ao fazer login:", error);
+      throw error;
+    }
   }
 
   function logout() {
     setUser(null);
   }
 
+  async function register(dadosCadastro) {
+    try {
+      await api.post("/jogadores", dadosCadastro);
+
+      await login({
+        email: dadosCadastro.email,
+        senha: dadosCadastro.senha || dadosCadastro.password,
+      });
+    } catch (error) {
+      console.error("Erro ao registrar usuário:", error);
+      throw error;
+    }
+  }
+
   return (
     <AuthContext.Provider
-      value={{ user, isAuthenticated: Boolean(user), login, logout }}
+      value={{ user, isAuthenticated: Boolean(user), login, register, logout }}
     >
       {children}
     </AuthContext.Provider>

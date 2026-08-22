@@ -15,11 +15,15 @@ export const registroSchema = z.object({
     .min(6, "A senha deve ter no mínimo 6 caracteres."),
 });
 
-export const loginSchema = z.object({
-  email: z
-    .string({ required_error: "O email é obrigatório." })
-    .email("Formato de email inválido."),
-  senha: z
-    .string({ required_error: "A senha é obrigatória." })
-    .min(1, "A senha não pode estar vazia."),
-});
+export const loginSchema = z
+  .object({
+    email: z
+      .string({ required_error: "O email é obrigatório." })
+      .email("Formato de email inválido."),
+    senha: z.string().min(1, "A senha não pode estar vazia.").optional(),
+    password: z.string().min(1, "A senha não pode estar vazia.").optional(),
+  })
+  .refine((data) => data.senha || data.password, {
+    message: "A senha é obrigatória",
+    path: ["senha"],
+  });

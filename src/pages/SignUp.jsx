@@ -3,7 +3,7 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 
 export default function SignUp() {
-  const { login } = useAuth();
+  const { register } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [name, setName] = useState("");
@@ -12,15 +12,26 @@ export default function SignUp() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     if (!name.trim() || !email.trim() || !password.trim()) {
       setError("Preencha nome, e-mail e senha para criar sua conta.");
       return;
     }
-    login({ name, email });
-    const redirectTo = location.state?.from || "/my-bookings";
-    navigate(redirectTo);
+
+    try {
+      setError("");
+      await register({ name, email, password, phone });
+
+      const redirectTo = location.state?.from || "/my-bookings";
+      navigate(redirectTo);
+    } catch (err) {
+      console.error("Erro ao cadastrar:", err);
+      setError(
+        err.response?.data?.mensagem ||
+          "Erro ao criar conta. Verifique os dados ou tente outro e-mail.",
+      );
+    }
   }
 
   return (
@@ -33,7 +44,9 @@ export default function SignUp() {
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <div>
-            <label className="text-sm font-medium text-slate-600">Nome completo</label>
+            <label className="text-sm font-medium text-slate-600">
+              Nome completo
+            </label>
             <input
               className="input mt-2"
               placeholder="Seu nome"
@@ -52,7 +65,9 @@ export default function SignUp() {
             />
           </div>
           <div>
-            <label className="text-sm font-medium text-slate-600">Telefone</label>
+            <label className="text-sm font-medium text-slate-600">
+              Telefone
+            </label>
             <input
               className="input mt-2"
               placeholder="(11) 99999-9999"
@@ -71,7 +86,9 @@ export default function SignUp() {
             />
           </div>
 
-          {error && <p className="text-sm font-medium text-rose-600">{error}</p>}
+          {error && (
+            <p className="text-sm font-medium text-rose-600">{error}</p>
+          )}
 
           <button type="submit" className="btn-primary w-full">
             Criar conta
