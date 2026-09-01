@@ -1,6 +1,6 @@
 # 🏟️ ArenaPlay — Agendamento de Quadras Esportivas
 
-Projeto **DFS-2026.2** desenvolvido como requisito do **CURSO: DESENVOLVIMENTO FULL STACK BÁSICO** para o **Bootcamp Atlântico Avanti**.
+Projeto desenvolvido como requisito do **CURSO: DESENVOLVIMENTO FULL STACK BÁSICO** para o **Bootcamp Atlântico Avanti**.
 
 Uma solução Full Stack web moderna para gerenciamento e agendamento online de quadras esportivas com validação de disponibilidade e conflitos em tempo real, autenticação JWT e painel do jogador.
 
