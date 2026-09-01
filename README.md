@@ -1,137 +1,239 @@
-# API de Agendamento de Quadras
+# 🏟️ ArenaPlay — Agendamento de Quadras Esportivas
 
-> **Projeto DFS-2026.2** desenvolvido como requisito do **CURSO: DESENVOLVIMENTO FULL STACK BÁSICO** para o **Bootcamp Atlântico Avanti**.
+Projeto **DFS-2026.2** desenvolvido como requisito do **CURSO: DESENVOLVIMENTO FULL STACK BÁSICO** para o **Bootcamp Atlântico Avanti**.
 
-Uma API RESTful robusta e segura projetada para o gerenciamento e agendamento de quadras esportivas, conectando jogadores a espaços disponíveis.
+Uma solução Full Stack web moderna para gerenciamento e agendamento online de quadras esportivas com validação de disponibilidade e conflitos em tempo real, autenticação JWT e painel do jogador.
 
-## Objetivo do Projeto
-
-O objetivo deste projeto é fornecer uma infraestrutura de backend segura e eficiente para um sistema de locação e agendamento de quadras esportivas, integrando o cadastro de jogadores, gerenciamento de quadras e o controle de reservas por meio de uma API RESTful.
-
----
-
-## Índice
-
-- [Equipe](#equipe)
-- [Tecnologias](#tecnologias)
-- [Funcionalidades Principais](#funcionalidades-principais)
-- [Estrutura do Banco de Dados](#estrutura-do-banco-de-dados)
-- [Como Executar o Projeto](#como-executar-o-projeto)
-- [Testes Automatizados](#testes-automatizados)
-- [Documentação da API](#documentação-da-api)
+![Node.js](https://img.shields.io/badge/Node.js-v18+-68a063?style=for-the-badge&logo=node.js)
+![Express](https://img.shields.io/badge/Express.js-API-000000?style=for-the-badge&logo=express)
+![React](https://img.shields.io/badge/React-18-61dafb?style=for-the-badge&logo=react)
+![Vite](https://img.shields.io/badge/Vite-Build-646CFF?style=for-the-badge&logo=vite)
+![Prisma](https://img.shields.io/badge/Prisma-ORM-2D3748?style=for-the-badge&logo=prisma)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-336791?style=for-the-badge&logo=postgresql)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-Styling-38B2AC?style=for-the-badge&logo=tailwind-css)
 
 ---
 
-## Equipe
+## 📌 Sobre o Projeto
+
+O **ArenaPlay** resolve o problema de agendamento informal de quadras esportivas, substituindo contatos manuais por um sistema automatizado com disponibilidade garantida.
+
+O sistema conta com arquitetura desacoplada (API RESTful em Node.js e SPA em React), aplicando boas práticas como validação de schemas de requisição com Zod, criptografia de senhas com Bcrypt, autenticação baseada em JWT e ORM Prisma conectado a um banco relacional PostgreSQL.
+
+---
+
+## 👥 Equipe de Desenvolvimento
 
 Este projeto foi construído colaborativamente pelos seguintes integrantes:
 
-- **Hevlina Karoll Lima Reis**
-- **Gabrielle Christie do Nascimento de Souza**
-- **Fellipi Kainnan Candido de Lima**
+- **Gabrielle Christie do Nascimento de Souza** — *Arquitetura Backend, Autenticação JWT, Motor de Reservas & Integração Frontend*
+- **Hevlina Karoll Lima Reis** — *Design de Interface, Componentização React & Módulo de Quadras*
+- **Fellipi Kainnan Candido de Lima** — *CRUD Backend (Quadras e Reservas), Testes de Integração, Regras de Validação & Documentação*
 
 ---
 
-## Tecnologias
+## ✨ Funcionalidades Principais
 
-O ecossistema do projeto foi construído utilizando as ferramentas mais modernas do mercado:
-
-- **Ambiente & Framework:** Node.js + Express (v5)
-- **Banco de Dados:** PostgreSQL
-- **ORM:** Prisma Client
-- **Segurança:** JWT (JSON Web Token) para autenticação e Bcrypt.js para hash de senhas
-- **Ferramentas:** Cors, Dotenv, Nodemon, Jest, Supertest
+- 🔐 **Autenticação & Autorização (RBAC):** Cadastro de usuários (`JOGADOR`), autenticação via JWT, controle de sessão no frontend e rotas protegidas por perfil (`JOGADOR` e `ADMIN`).
+- 🏟️ **Catálogo de Quadras:** Filtros por modalidade esportiva (Futsal, Society, Beach Tennis, Tênis, Basquete, Vôlei), localização, preço/hora e status de disponibilidade.
+- ⚡ **Motor Anti-Conflito de Reservas:** Validação no backend que verifica sobreposições de horários (`horarioInicio` e `horarioFim`) para a mesma quadra antes de confirmar o agendamento.
+- 📊 **Painel do Jogador ("Minhas Reservas"):** Visualização detalhada dos próximos jogos, histórico de reservas passadas/canceladas e opção de cancelamento de reservas ativas.
 
 ---
 
-## Funcionalidades Principais
+## 🛠️ Tecnologias Utilizadas
 
-- **Autenticação Segura:** Login para Jogadores e Administradores via tokens JWT.
-- **Gestão de Usuários:** Cadastro e gerenciamento de perfis.
-- **Catálogo de Quadras:** Registro de espaços com informações sobre modalidade, localização e disponibilidade (`DISPONIVEL` ou `INDISPONIVEL`).
-- **Sistema de Reservas:** Motor de agendamento que calcula horários, atrela o jogador à quadra e gerencia o ciclo de vida da reserva (`ATIVA`, `CANCELADA`, `CONCLUIDA`).
+### **Backend**
+* **Node.js** & **Express** (API RESTful)
+* **Prisma ORM** (Modelagem de dados, migrations e type-safety)
+* **PostgreSQL** (Banco de dados relacional)
+* **JWT (JSON Web Token)** & **Bcrypt.js** (Segurança e autenticação)
+* **Zod** (Validação de schemas e entradas HTTP)
+* **Jest** & **Supertest** (Suíte de testes de integração)
+
+### **Frontend**
+* **React 18** + **Vite** (Single Page Application)
+* **Tailwind CSS** (Estilização responsiva e UI moderna)
+* **React Router DOM v6** (Roteamento dinâmico e rotas protegidas)
+* **Axios** (Cliente HTTP com interceptors para tokens de autorização)
+* **Lucide React** (Iconografia)
 
 ---
 
-## Estrutura do Banco de Dados
+## 🗄️ Modelagem do Banco de Dados
 
-O modelo de dados (Schema Prisma) está dividido em quatro entidades principais com relacionamentos consistentes:
+```mermaid
+erDiagram
+    Jogador ||--o{ Reserva : "realiza"
+    Quadra ||--o{ Reserva : "pertence"
 
-1.  **Administrador:** Controle total do sistema.
-2.  **Jogador:** Usuário final que realiza as marcações.
-3.  **Quadra:** O recurso que será reservado.
-4.  **Reserva:** Tabela pivô com as regras de negócio, datas e horários da partida.
+    Jogador {
+        Uuid id PK
+        String nomeCompleto
+        String email UK
+        String telefone
+        String senha
+    }
+
+    Administrador {
+        Uuid id PK
+        String nome
+        String email UK
+        String telefone
+        String senha
+    }
+
+    Quadra {
+        Uuid id PK
+        String nome
+        String modalidade
+        String localizacao
+        Decimal precoHora
+        StatusQuadra status
+    }
+
+    Reserva {
+        Uuid id PK
+        Uuid jogadorId FK
+        Uuid quadraId FK
+        DateTime data
+        DateTime horarioInicio
+        DateTime horarioFim
+        Decimal valorTotal
+        StatusReserva status
+    }
+```
 
 ---
 
-## Como Executar o Projeto
+## 📡 Endpoints Principais da API
 
-Siga o passo a passo abaixo para rodar a aplicação no seu ambiente local.
+### 🔑 Autenticação (`/auth`)
+| Método | Endpoint | Descrição | Requer Auth |
+|---|---|---|---|
+| `POST` | `/auth/registrar` | Cadastra um novo jogador no sistema | Não |
+| `POST` | `/auth/login` | Autentica usuário e gera Token JWT | Não |
+| `GET` | `/auth/perfil` | Retorna dados do perfil autenticado | Sim |
 
-### 1. Pré-requisitos
+### 🏟️ Quadras (`/quadras`)
+| Método | Endpoint | Descrição | Requer Auth |
+|---|---|---|---|
+| `GET` | `/quadras` | Lista todas as quadras cadastradas | Não |
+| `GET` | `/quadras/:id` | Retorna os detalhes de uma quadra por ID | Não |
+| `POST` | `/quadras` | Cadastra uma nova quadra | Admin |
+| `PUT` | `/quadras/:id` | Atualiza dados de uma quadra | Admin |
+| `DELETE` | `/quadras/:id` | Remove uma quadra do sistema | Admin |
 
-Certifique-se de ter instalado em sua máquina:
+### 📅 Reservas (`/reservas`)
+| Método | Endpoint | Descrição | Requer Auth |
+|---|---|---|---|
+| `POST` | `/reservas` | Cria um agendamento com validação de horário | Sim |
+| `GET` | `/reservas` | Lista reservas (do usuário logado ou todas se Admin) | Sim |
+| `GET` | `/reservas/:id` | Detalhes de uma reserva específica | Sim |
+| `DELETE` | `/reservas/:id` | Cancela/Remove uma reserva ativa | Sim |
 
-- [Node.js](https://nodejs.org/pt-br/) (versão LTS recomendada)
-- [PostgreSQL](https://www.postgresql.org/) (serviço rodando localmente ou URL de um banco em nuvem)
+---
 
-### 2. Instalação
+## ⚙️ Como Executar o Projeto
 
-Clone este repositório e acesse o diretório do backend:
+### **Pré-requisitos**
+- [Node.js](https://nodejs.org/) (v18 ou superior)
+- [PostgreSQL](https://www.postgresql.org/) rodando localmente ou container Docker
+
+---
+
+### **1. Configuração e Execução do Backend**
 
 ```bash
-git clone [https://github.com/gabriellechristie-dev/Agendamento-Quadras-Esportivas-DFS-2026.2](https://github.com/gabriellechristie-dev/Agendamento-Quadras-Esportivas-DFS-2026.2)
+# Acesse o diretório do backend
 cd backend
-```
 
-Instale todas as dependências do projeto:
-
-```bash
+# Instale as dependências
 npm install
-```
 
-### 3. Variáveis de Ambiente
+# Crie e configure o arquivo de variáveis de ambiente
+cp .env.example .env
 
-Crie um arquivo chamado `.env` na raiz do projeto e configure suas credenciais seguindo o padrão abaixo:
+# Exemplo de conteúdo do .env:
+# PORT=3000
+# DATABASE_URL="postgresql://usuario:senha@localhost:5432/arenaplay?schema=public"
+# JWT_SECRET="sua_chave_secreta_jwt"
 
-```env
-PORT=3000
-DATABASE_URL="postgresql://SEU_USUARIO:SUA_SENHA@localhost:5432/nome_do_banco?schema=public"
-JWT_SECRET="sua_chave_secreta_aqui"
-```
-
-### 4. Sincronização do Banco de Dados
-
-Gere as tabelas no PostgreSQL utilizando o Prisma:
-
-```bash
+# Sincronize o banco de dados com o Prisma
 npx prisma db push
-```
 
-### 5. Iniciando o Servidor
-
-Para rodar a API em modo de desenvolvimento (com recarregamento automático):
-
-```bash
+# Inicie o servidor em modo de desenvolvimento
 npm run dev
 ```
-
-> Se tudo estiver correto, você verá no terminal: `Servidor rodando em http://localhost:3000`
+*O backend estará rodando em `http://localhost:3000`.*
 
 ---
 
-## Testes Automatizados
-
-Para rodar a suíte de testes de integração do sistema (configurada com Jest e Supertest), utilize o comando:
+### **2. Configuração e Execução do Frontend**
 
 ```bash
+# Em outro terminal, acesse o diretório do frontend
+cd frontend
+
+# Instale as dependências
+npm install
+
+# Crie e configure o arquivo .env do frontend
+# VITE_API_URL=http://localhost:3000
+
+# Inicie a aplicação com o Vite
+npm run dev
+```
+*Acesse o sistema no navegador através de `http://localhost:5173`.*
+
+---
+
+## 📁 Estrutura de Pastas
+
+```text
+.
+├── docs/
+│   └── DOCUMENTACAO.md         # Documentação técnica detalhada da solução
+├── backend/
+│   ├── prisma/                # Schema Prisma e migrations
+│   ├── src/
+│   │   ├── auth/              # Controller, rotas e serviços de autenticação
+│   │   ├── controllers/       # Controladores HTTP (Quadras, Reservas)
+│   │   ├── middlewares/       # Middleware JWT, autorização e validação Zod
+│   │   ├── routes/            # Definição de rotas da API
+│   │   ├── schemas/           # Schemas de validação de dados Zod
+│   │   ├── services/          # Regras de negócio e acesso ao banco
+│   │   └── utils/             # Motor de checagem de conflitos de horário
+│   ├── tests/                 # Testes de integração com Jest e Supertest
+│   ├── app.js                 # Configuração do Express e CORS
+│   └── server.js              # Inicialização da porta HTTP
+│
+└── frontend/
+    ├── src/
+    │   ├── components/        # Componentes de UI reutilizáveis
+    │   ├── context/           # Contexto global de autenticação (AuthContext)
+    │   ├── pages/             # Páginas da aplicação (Home, Quadras, Reservas)
+    │   ├── services/          # Instância do Axios com Interceptors
+    │   └── App.jsx            # Rotas e proteção de páginas
+    ├── index.html
+    └── vite.config.js
+```
+
+---
+
+## 🧪 Testes Automatizados
+
+Para executar os testes de integração da API (backend):
+
+```bash
+cd backend
 npm run test
 ```
 
 ---
 
-## Documentação da API
+## 📄 Documentação Completa
 
-A documentação detalhada das rotas, parâmetros necessários, regras de autenticação e exemplos de requisições está disponível na nossa pasta oficial de documentação.
+Para detalhes aprofundados sobre arquitetura, decisões técnicas, regras matemáticas de validação de horário e guia de endpoints, acesse o arquivo dedicado:
 
-👉 **[Acessar a Documentação Completa (API.md)](./docs/API.md)**
+👉 **[Acessar Documentação Técnica Completa (`docs/DOCUMENTACAO.md`)](./docs/DOCUMENTACAO.md)**

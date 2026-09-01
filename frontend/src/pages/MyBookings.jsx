@@ -1,41 +1,65 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
-import { CalendarClock, Ticket, Heart, History, MapPin } from "lucide-react";
+import { CalendarClock, Ticket, Heart, History, MapPin, Loader2 } from "lucide-react";
 import { useAuth } from "../context/AuthContext.jsx";
-import { useBooking } from "../context/BookingContext.jsx";
-import { getCourtById } from "../data/courts.js";
 import { formatLongDate, formatPrice } from "../utils/formatters.js";
-import CourtCard from "../components/courts/CourtCard.jsx";
+import { reservaService } from "../services/reservaService.js";
 
-const TABS = ["Próximos", "Histórico", "Favoritos", "Perfil"];
+const TABS = ["Próximos", "Histórico", "Perfil"];
 
 export default function MyBookings() {
   const { user, isAuthenticated } = useAuth();
-  const { bookings, favorites, cancelBooking } = useBooking();
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("Próximos");
 
-  const today = new Date().toISOString().split("T")[0];
+  const fetchReservas = async () => {
+    try {
+      setLoading(true);
+      const data = await reservaService.listarMinhas();
+      setBookings(data || []);
+    } catch (err) {
+      console.error("Erro ao carregar reservas:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchReservas();
+    }
+  }, [isAuthenticated]);
+
+  const handleCancelBooking = async (reservaId) => {
+    if (window.confirm("Deseja realmente cancelar este agendamento?")) {
+      try {
+        await reservaService.cancelar(reservaId);
+        await fetchReservas(); // Recarrega a lista atualizada do backend
+      } catch (err) {
+        alert("Erro ao cancelar reserva. Tente novamente.");
+      }
+    }
+  };
+
+  const today = new Date().toISOString();
 
   const upcoming = useMemo(
-    () => bookings.filter((b) => b.status === "confirmed" && b.date >= today),
+    () => bookings.filter((b) => b.status === "ATIVA" && b.horarioInicio >= today),
     [bookings, today]
   );
+
   const history = useMemo(
-    () => bookings.filter((b) => b.status === "cancelled" || b.date < today),
+    () => bookings.filter((b) => b.status === "CANCELADA" || b.horarioInicio < today),
     [bookings, today]
   );
-  const totalSpent = useMemo(
-    () => bookings.filter((b) => b.status === "confirmed").reduce((sum, b) => sum + b.price, 0),
-    [bookings]
-  );
-  const favoriteCourts = favorites.map((id) => getCourtById(id)).filter(Boolean);
 
   if (!isAuthenticated) {
     return (
       <div className="container-app flex flex-col items-center justify-center py-24 text-center">
         <h1 className="font-display text-2xl font-bold">Entre para ver suas reservas</h1>
         <p className="mt-3 max-w-sm text-slate-500">
-          Seu painel reúne próximos jogos, histórico, favoritos e perfil.
+          Seu painel reúne próximos jogos, histórico e perfil.
         </p>
         <div className="mt-6 flex gap-3">
           <NavLink to="/login" className="btn-primary">
@@ -51,14 +75,15 @@ export default function MyBookings() {
 
   return (
     <div className="container-app py-10">
-      <h1 className="font-display text-3xl font-bold">Olá, {user.name}</h1>
+      <h1 className="font-display text-3xl font-bold">
+        Olá, {user?.nomeCompleto || user?.nome || "Jogador"}
+      </h1>
       <p className="mt-1 text-slate-500">Acompanhe seus jogos e mantenha seus dados em dia.</p>
 
-      <div className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-3">
         <StatCard icon={CalendarClock} value={upcoming.length} label="Próximos jogos" />
         <StatCard icon={Ticket} value={bookings.length} label="Total de reservas" />
-        <StatCard icon={Heart} value={favoriteCourts.length} label="Favoritas" />
-        <StatCard icon={History} value={formatPrice(totalSpent)} label="Total investido" />
+        <StatCard icon={History} value={history.length} label="Histórico" />
       </div>
 
       <div className="mt-8 inline-flex flex-wrap gap-1 rounded-full bg-slate-100 p-1">
@@ -78,51 +103,45 @@ export default function MyBookings() {
       </div>
 
       <div className="mt-6">
-        {activeTab === "Próximos" && (
-          <BookingList
-            bookings={upcoming}
-            emptyTitle="Nenhuma reserva por aqui"
-            emptyDescription="Escolha uma quadra e garanta o próximo jogo da turma."
-            onCancel={cancelBooking}
-          />
-        )}
-
-        {activeTab === "Histórico" && (
-          <BookingList
-            bookings={history}
-            emptyTitle="Nenhum histórico ainda"
-            emptyDescription="Suas reservas passadas e canceladas vão aparecer aqui."
-          />
-        )}
-
-        {activeTab === "Favoritos" &&
-          (favoriteCourts.length > 0 ? (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
-              {favoriteCourts.map((court) => (
-                <CourtCard key={court.id} court={court} />
-              ))}
-            </div>
-          ) : (
-            <EmptyState
-              title="Nenhuma quadra favoritada"
-              description="Toque no coração de uma quadra para salvá-la aqui."
-            />
-          ))}
-
-        {activeTab === "Perfil" && (
-          <div className="card max-w-md p-6">
-            <h2 className="font-display text-lg font-bold">Meus dados</h2>
-            <div className="mt-4 space-y-4">
-              <div>
-                <p className="text-xs font-medium uppercase text-slate-400">Nome</p>
-                <p className="text-sm font-medium">{user.name}</p>
-              </div>
-              <div>
-                <p className="text-xs font-medium uppercase text-slate-400">E-mail</p>
-                <p className="text-sm font-medium">{user.email || "—"}</p>
-              </div>
-            </div>
+        {loading ? (
+          <div className="flex h-32 items-center justify-center">
+            <Loader2 className="h-6 w-6 animate-spin text-brand-600" />
           </div>
+        ) : (
+          <>
+            {activeTab === "Próximos" && (
+              <BookingList
+                bookings={upcoming}
+                emptyTitle="Nenhuma reserva ativa"
+                emptyDescription="Escolha uma quadra e garanta o próximo jogo da turma."
+                onCancel={handleCancelBooking}
+              />
+            )}
+
+            {activeTab === "Histórico" && (
+              <BookingList
+                bookings={history}
+                emptyTitle="Nenhum histórico ainda"
+                emptyDescription="Suas reservas passadas e canceladas vão aparecer aqui."
+              />
+            )}
+
+            {activeTab === "Perfil" && (
+              <div className="card max-w-md p-6">
+                <h2 className="font-display text-lg font-bold">Meus dados</h2>
+                <div className="mt-4 space-y-4">
+                  <div>
+                    <p className="text-xs font-medium uppercase text-slate-400">Nome</p>
+                    <p className="text-sm font-medium">{user?.nomeCompleto || user?.nome || "—"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium uppercase text-slate-400">E-mail</p>
+                    <p className="text-sm font-medium">{user?.email || "—"}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
@@ -165,7 +184,8 @@ function BookingList({ bookings, emptyTitle, emptyDescription, onCancel }) {
   return (
     <div className="space-y-4">
       {bookings.map((booking) => {
-        const court = getCourtById(booking.courtId);
+        const horaInicio = new Date(booking.horarioInicio).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        
         return (
           <div
             key={booking.id}
@@ -173,30 +193,32 @@ function BookingList({ bookings, emptyTitle, emptyDescription, onCancel }) {
           >
             <div className="flex items-center gap-4">
               <div>
-                <p className="font-semibold">{booking.courtName}</p>
+                <p className="font-semibold">{booking.quadra?.nome || "Quadra Esportiva"}</p>
                 <p className="flex items-center gap-1 text-sm text-slate-500">
                   <MapPin size={13} />
-                  {court ? `${court.neighborhood}, ${court.city}` : ""}
+                  {booking.quadra?.localizacao || "Endereço não cadastrado"}
                 </p>
                 <p className="mt-1 text-sm text-slate-500">
-                  {formatLongDate(booking.date)} · {booking.time}
+                  {formatLongDate(booking.horarioInicio?.split("T")[0])} · {horaInicio}
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-4">
               <div className="text-right">
-                <p className="font-bold">{formatPrice(booking.price)}</p>
                 <p
                   className={`text-xs font-semibold ${
-                    booking.status === "confirmed" ? "text-emerald-600" : "text-rose-500"
+                    booking.status === "ATIVA" ? "text-emerald-600" : "text-rose-500"
                   }`}
                 >
-                  {booking.status === "confirmed" ? "Confirmada" : "Cancelada"}
+                  {booking.status === "ATIVA" ? "Ativa" : "Cancelada"}
                 </p>
               </div>
-              {onCancel && booking.status === "confirmed" && (
-                <button onClick={() => onCancel(booking.id)} className="btn-secondary !px-4 !py-2 text-sm">
+              {onCancel && booking.status === "ATIVA" && (
+                <button
+                  onClick={() => onCancel(booking.id)}
+                  className="btn-secondary !px-4 !py-2 text-sm text-rose-600 hover:bg-rose-50"
+                >
                   Cancelar
                 </button>
               )}

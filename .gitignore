@@ -1,17 +1,21 @@
-node_modules
-dist
-dist-ssr
+# Node & Build
+node_modules/
+dist/
+dist-ssr/
+build/
 *.local
 
-# Editor
-.vscode/*
-!.vscode/extensions.json
-.idea
+# Environment Variables (Nunca subir segredos)
+.env
+.env.local
 
-# OS
-.DS_Store
-
-# Logs
+# Ferramentas de IA / Logs
+repomix-output.*
+*.log
 npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+
+# Sistema / IDE
+.DS_Store
+.vscode/
+!.vscode/extensions.json
+.idea/
