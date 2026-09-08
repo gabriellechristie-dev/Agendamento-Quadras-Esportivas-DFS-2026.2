@@ -14,9 +14,8 @@ Uma solução Full Stack web moderna para gerenciamento e agendamento online de 
 
 
 <p align="center">
-   <img src="https://github.com/user-attachments/assets/b7d0dc7d-3533-4455-88c3-e67660d3dfff" height="300">
-  &nbsp;&nbsp;
- <img src="https://github.com/user-attachments/assets/5c3e64f0-57cd-4e4b-886d-731b8ab13e89" height="300">
+  <img src="https://github.com/user-attachments/assets/b7d0dc7d-3533-4455-88c3-e67660d3dfff" width="400">
+  <img src="https://github.com/user-attachments/assets/5c3e64f0-57cd-4e4b-886d-731b8ab13e89" width="400">
 </p>
 
 ---
